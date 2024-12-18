@@ -138,6 +138,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 개발 서버
+    "https://cazac11722.pythonanywhere.com",
 ]
 
 # 모든 origin 허용 (개발용, 배포 시 주의)

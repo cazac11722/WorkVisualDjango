@@ -25,7 +25,11 @@ SECRET_KEY = 'django-insecure-uh!-cs)x=k)#(y(zoi7-bc6#bt#h66izy%y=*y_9)z!woar48n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    'cazac11722.pythonanywhere.com',
+    'localhost',
+    '127.0.0.1',
+]
 
 
 # Application definition
@@ -138,11 +142,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React 개발 서버
-    "https://cazac11722.pythonanywhere.com",
+    "https://cazac11722.github.io/WorkVisual/"
 ]
 
 # 모든 origin 허용 (개발용, 배포 시 주의)
-CORS_ALLOW_ALL_ORIGINS = False  # True로 설정하면 모든 도메인을 허용합니다.
+CORS_ALLOW_ALL_ORIGINS = True  # True로 설정하면 모든 도메인을 허용합니다.
 
 # CORS에 인증 정보 (Cookie, Authorization Header)를 전달하도록 설정
 CORS_ALLOW_CREDENTIALS = True

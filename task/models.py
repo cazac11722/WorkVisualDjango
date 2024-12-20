@@ -51,3 +51,28 @@ class TaskPoints(models.Model):
 
     def __str__(self):
         return f"Points for Task: {self.task.title} - {self.points} pts"
+
+# 업무 테이블
+class ProjectTask(models.Model):
+    STATUS_CHOICES = [
+        ("In Progress", "진행 중"),
+        ("Completed", "완료"),
+        ("Pending", "보류중"),
+        ("On Hold", "홀딩"),
+    ]
+
+    task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name='project')  # 업무와 1:1 관계
+    title = models.CharField(max_length=255)  # 업무 제목
+    work_contents = models.TextField()  # 업무기획-내용
+    work_details = models.TextField(null=True, blank=True)  # 상세 업무 내용
+    reason_delay = models.TextField(null=True, blank=True)  # 지연사유
+    link = models.TextField(null=True, blank=True)  # 관련 링크
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="Pending")  # 상태
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='project_tasks_created')  # 생성자
+    start_time = models.TimeField(null=True,  blank=True)  # 시작 시간
+    end_time = models.TimeField(null=True, blank=True)  # 종료 시간 (선택적 입력)
+    created_at = models.DateTimeField(auto_now_add=True)  # 생성일
+    updated_at = models.DateTimeField(auto_now=True)  # 수정일
+
+    def __str__(self):
+        return self.title

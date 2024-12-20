@@ -1,6 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404
 from .models import Task, TaskTimeInfo, TaskPerformance, TaskPoints, ProjectTask
 from .serializers import (
@@ -31,7 +32,7 @@ class TaskDetailAPIView(APIView):
 
     def put(self, request, pk):
         task = get_object_or_404(Task, pk=pk)
-        serializer = TaskSerializer(task, data=request.data)
+        serializer = TaskSerializer(task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -41,6 +42,20 @@ class TaskDetailAPIView(APIView):
         task = get_object_or_404(Task, pk=pk)
         task.delete()
         return Response({"message": "Task deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+
+class UserTasksAPIView(APIView):
+    """
+    특정 유저의 모든 업무를 조회하는 API
+    """
+    def get(self, request, user_id):
+        user = User.objects.filter(id=user_id).first()
+        if not user:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        tasks = Task.objects.filter(created_by=user.id)
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
 
 # 포인트 조회, 수정 및 삭제
 class TaskPointsAPIView(APIView):
@@ -165,7 +180,7 @@ class ProjectTaskAPIView(APIView):
 
     def put(self, request, pk=None, task_pk=None):
         project_task = get_object_or_404(ProjectTask, pk=task_pk)
-        serializer = ProjectTaskSerializer(project_task, data=request.data)
+        serializer = ProjectTaskSerializer(project_task, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)

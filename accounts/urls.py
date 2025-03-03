@@ -1,12 +1,23 @@
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import *
-from django.contrib.auth import views as auth_views
+
+router = DefaultRouter()
+router.register(r'users', UserViewSet, basename='users')
+router.register(r'users-profile', UserProfileViewSet, basename='users-profile')
+router.register(r'organizations', OrganizationViewSet, basename='organizations')
+router.register(r'organization-departments', OrganizationDepartmentViewSet, basename='organization-departments')
+router.register(r'organization-ranks', OrganizationRankViewSet, basename='organization-ranks')
+router.register(r'organization-reasons', OrganizationReasonViewSet, basename='organization-reasons')
+router.register(r'organization-users', OrganizationUserViewSet, basename='organization-users')
+router.register(r'organization-user-points', OrganizationUserPointViewSet, basename='organization-user-points')
+router.register(r'organization-user-reasons', OrganizationUserReasonViewSet, basename='organization-user-reasons')
+router.register(r'attendance', AttendanceViewSet, basename='attendance')
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
-    path('users/', UserListView.as_view(), name='user_list'),
-    path('users/<int:user_id>/', UserDetailView.as_view(), name='user_detail'),
-    path('users/<int:user_id>/delete/', UserDeleteView.as_view(), name='user_delete'),  # 회원 삭제
-    path('users/<int:user_id>/update/', UserUpdateView.as_view(), name='user_update'),  # 회원 정보 수정
+    path('change-password/', PasswordChangeView.as_view(), name='change-password'),
+
+    path('', include(router.urls)),
 ]

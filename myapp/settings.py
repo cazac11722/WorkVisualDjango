@@ -42,9 +42,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # 추가된 앱
     'accounts',
     'task_management',
-    'task',
     
     'rest_framework',
     'rest_framework.authtoken',

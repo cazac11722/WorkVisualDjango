@@ -1,11 +1,14 @@
+from rest_framework import status, viewsets
 from rest_framework.generics import GenericAPIView
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from rest_framework.authtoken.models import Token
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
-from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from .models import *
+from .serializers import *
 
 class RegisterView(GenericAPIView):
     serializer_class = RegisterSerializer
@@ -37,56 +40,142 @@ class LoginView(GenericAPIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class UserListView(APIView):
-    """
-    모든 사용자 정보를 반환하는 API 엔드포인트
-    """
+class PasswordChangeView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        serializer = PasswordChangeSerializer(data=request.data)
+        if serializer.is_valid():
+            user = request.user
+            if not check_password(serializer.validated_data['current_password'], user.password):
+                return Response({"error": "현재 비밀번호가 올바르지 않습니다."}, status=status.HTTP_400_BAD_REQUEST)
+            
+            user.set_password(serializer.validated_data['new_password'])
+            user.save()
+            return Response({"message": "비밀번호가 성공적으로 변경되었습니다."}, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def get(self, request):
-        users = User.objects.all()  # 모든 사용자 가져오기
-        serializer = UserSerializer(users, many=True)  # 여러 사용자 직렬화
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [IsAuthenticated]
 
-class UserDetailView(APIView):
-    """
-    특정 회원 ID를 기반으로 사용자 정보를 반환하는 API
-    """
+class UserProfileViewSet(viewsets.ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
 
-    def get(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)  # 특정 ID의 사용자 검색
-            serializer = UserSerializer(user)   # 사용자 데이터를 직렬화
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"error": "해당 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+class OrganizationViewSet(viewsets.ModelViewSet):
+    queryset = Organization.objects.all()
+    serializer_class = OrganizationSerializer
+    permission_classes = [IsAuthenticated]
 
-class UserDeleteView(APIView):
-    """
-    특정 회원 ID를 기반으로 사용자를 삭제하는 API
-    """
+    def get_queryset(self):
+        owner = self.request.query_params.get('owner', None)
+        if owner:
+            return Organization.objects.filter(owner__id=owner)
+        return Organization.objects.all()
 
-    def delete(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)  # 특정 ID의 사용자 검색
-            user.delete()  # 사용자 삭제
-            return Response({"message": "사용자가 성공적으로 삭제되었습니다."}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"error": "해당 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
+class OrganizationDepartmentViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationDepartment.objects.all()
+    serializer_class = OrganizationDepartmentSerializer
+    permission_classes = [IsAuthenticated]
+
+class OrganizationRankViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationRank.objects.all()
+    serializer_class = OrganizationRankSerializer
+    permission_classes = [IsAuthenticated]
+
+class OrganizationUserViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationUser.objects.all()
+    serializer_class = OrganizationUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_id = self.request.query_params.get('user', None)
+        if user_id:
+            return OrganizationUser.objects.filter(user__id=user_id)
+        return OrganizationUser.objects.all()
+
+    def perform_create(self, serializer):
+        request_data = serializer.validated_data
+        organization = request_data.get("organization")
+
+        if not organization:
+            raise serializers.ValidationError({"organization": "조직 정보를 제공해야 합니다."})
+
+        org_user = serializer.save()
+        user = org_user.user
+        profile, created = UserProfile.objects.get_or_create(user=user)
+
+        profile.company_name = org_user.organization.name
+        profile.department = org_user.department.title if org_user.department else ''  # 문자열로 저장
+        profile.position = org_user.rank.title if org_user.rank else ''  # 문자열로 저장
+        profile.save()
+
+    def perform_update(self, serializer):
+        request_data = serializer.validated_data
+        organization = request_data.get("organization")
+
+        if not organization:
+            raise serializers.ValidationError({"organization": "조직 정보를 제공해야 합니다."})
+            
+        org_user = serializer.save()
+        user = org_user.user
+        profile = UserProfile.objects.filter(user=user).first()
+        if profile:
+            profile.department = org_user.department.title if org_user.department else ''  # 문자열로 저장
+            profile.position = org_user.rank.title if org_user.rank else ''  # 문자열로 저장
+            profile.save()
+
+    def update(self, request, *args, **kwargs):
+        user_id = self.request.query_params.get('user', None)
+        
+        if user_id:
+            instance = self.get_queryset().filter(user__id=user_id).first()
+            if not instance:
+                return Response({"error": "해당 사용자가 존재하지 않습니다."}, status=404)
+            
+            serializer = self.get_serializer(instance, data=request.data, partial=True)
+            serializer.is_valid(raise_exception=True)
+            self.perform_update(serializer)
+            return Response(serializer.data)
+
+        return super().update(request, *args, **kwargs)
+
+    def perform_destroy(self, instance):
+        user = instance.user
+        profile = UserProfile.objects.filter(user=user).first()
+        if profile:
+            profile.department = ''
+            profile.position = ''
+            profile.save()
+        instance.delete()
+
+class OrganizationUserPointViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationUserPoint.objects.all()
+    serializer_class = OrganizationUserPointSerializer
+    permission_classes = [IsAuthenticated]
+
+class OrganizationUserReasonViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationUserReason.objects.all()
+    serializer_class = OrganizationUserReasonSerializer
+    permission_classes = [IsAuthenticated]
+
+class OrganizationReasonViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationReason.objects.all()
+    serializer_class = OrganizationReasonSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationReason.objects.filter(organization__id=organization)
+        return OrganizationReason.objects.all()
 
 
-class UserUpdateView(APIView):
-    """
-    특정 회원 ID를 기반으로 사용자 정보를 수정하는 API
-    """
 
-    def put(self, request, user_id):
-        try:
-            user = User.objects.get(id=user_id)  # 특정 ID의 사용자 검색
-            serializer = UserSerializer(user, data=request.data, partial=True)  # 데이터 직렬화
-            if serializer.is_valid():
-                serializer.save()  # 사용자 정보 업데이트
-                return Response(serializer.data, status=status.HTTP_200_OK)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except User.DoesNotExist:
-            return Response({"error": "해당 사용자를 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
-
+class AttendanceViewSet(viewsets.ModelViewSet):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = [IsAuthenticated]

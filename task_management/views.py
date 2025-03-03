@@ -1,46 +1,46 @@
+# views.py
+from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from .permissions import IsAdminUserOrReadOnly  # permissions.py에서 가져오기
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-from .models import TaskCategory, TaskStatus, TaskTitle, TaskContent, TaskEstimatedTime
-from .serializers import (
-    TaskCategorySerializer,
-    TaskStatusSerializer,
-    TaskTitleSerializer,
-    TaskContentSerializer,
-    TaskEstimatedTimeSerializer,
-)
+from .models import *
+from .serializers import *
 
-# 업무 카테고리 API
-class TaskCategoryAPIView(APIView):
-    permission_classes = [IsAuthenticated, IsAdminUserOrReadOnly]
-    def get(self, request):
-        categories = TaskCategory.objects.all()
-        serializer = TaskCategorySerializer(categories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+class TaskViewSet(viewsets.ModelViewSet):
+    queryset = Task.objects.all()
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
 
-    def post(self, request):
-        serializer = TaskCategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def get_queryset(self):
+        """
+        특정 조직에 속한 Task만 필터링하여 반환
+        """
+        organization_id = self.request.query_params.get("organization", None)
+        
+        if organization_id:
+            return Task.objects.filter(organization_id=organization_id)
+        
+        return Task.objects.all()
 
-# 업무 카테고리 수정 및 삭제 API
-class TaskCategoryDetailAPIView(APIView):
-    def put(self, request, pk):
-        category = get_object_or_404(TaskCategory, pk=pk)
-        serializer = TaskCategorySerializer(category, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+class GoalViewSet(viewsets.ModelViewSet):
+    queryset = Goal.objects.all()
+    serializer_class = GoalSerializer
+    permission_classes = [IsAuthenticated]
 
-    def delete(self, request, pk):
-        category = get_object_or_404(TaskCategory, pk=pk)
-        category.delete()
-        return Response({"message": "삭제되었습니다."}, status=status.HTTP_204_NO_CONTENT)
+    def get_queryset(self):
+        content = self.request.query_params.get('content')
+        organizer = self.request.query_params.get('organizer')
+        goal_id = self.request.query_params.get('id')
 
-# 업무 상태, 제목, 내용, 예상 시간 API는 동일한 구조로 작성
+        queryset = Goal.objects.all()
+        if content:
+            queryset = queryset.filter(content__icontains=content)
+        if organizer:
+            queryset = queryset.filter(organizer__username=organizer)
+        if goal_id:
+            queryset = queryset.filter(id=goal_id)
+
+        return queryset
+
+class TaskChatViewSet(viewsets.ModelViewSet):
+    queryset = TaskChat.objects.all()
+    serializer_class = TaskChatSerializer
+    permission_classes = [IsAuthenticated]

@@ -1,27 +1,27 @@
+
+# serializers.py
 from rest_framework import serializers
-from .models import TaskCategory, TaskStatus, TaskTitle, TaskContent, TaskEstimatedTime
+from .models import *
+from accounts.models import Organization, OrganizationUser
+from accounts.serializers import UserProfileSerializer  # accounts 앱에서 가져오기
 
-class TaskCategorySerializer(serializers.ModelSerializer):
+class TaskSerializer(serializers.ModelSerializer):
+    author_profile = UserProfileSerializer(read_only=True, source="author.profile")  # ✅ 작성자의 프로필 정보 추가
+
     class Meta:
-        model = TaskCategory
+        model = Task
+        fields = [
+            "id", "title", "upload_date", "modified_date", "progress",
+            "attributes", "table_head", "table_body",
+            "organization", "author", "author_profile"  # ✅ 작성자 프로필 포함
+        ]
+        
+class GoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Goal
         fields = '__all__'
 
-class TaskStatusSerializer(serializers.ModelSerializer):
+class TaskChatSerializer(serializers.ModelSerializer):
     class Meta:
-        model = TaskStatus
-        fields = '__all__'
-
-class TaskTitleSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskTitle
-        fields = '__all__'
-
-class TaskContentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskContent
-        fields = '__all__'
-
-class TaskEstimatedTimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaskEstimatedTime
+        model = TaskChat
         fields = '__all__'

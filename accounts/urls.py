@@ -12,6 +12,11 @@ router.register(r'organization-reasons', OrganizationReasonViewSet, basename='or
 router.register(r'organization-users', OrganizationUserViewSet, basename='organization-users')
 router.register(r'organization-user-points', OrganizationUserPointViewSet, basename='organization-user-points')
 router.register(r'organization-user-reasons', OrganizationUserReasonViewSet, basename='organization-user-reasons')
+router.register(r'organization-project-scope', OrganizationProjectScopeViewSet, basename='organization-project-scope')
+router.register(r'organization-project-type', OrganizationProjectTypeViewSet, basename='organization-project-type')
+router.register(r'organization-goal', OrganizationGoalViewSet, basename='organization-goal')
+router.register(r'organization-commontext', OrganizationCommonTextViewSet, basename='organization-commontext')
+router.register(r'organization-work-result', OrganizationWorkResultViewSet, basename='organization-work-result')
 router.register(r'attendance', AttendanceViewSet, basename='attendance')
 
 urlpatterns = [

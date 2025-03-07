@@ -71,10 +71,15 @@ class OrganizationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        queryset = Organization.objects.all()
         owner = self.request.query_params.get('owner', None)
+        name = self.request.query_params.get('name', None)
+
         if owner:
-            return Organization.objects.filter(owner__id=owner)
-        return Organization.objects.all()
+            queryset = queryset.filter(owner__id=owner)
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+        return queryset
 
 class OrganizationDepartmentViewSet(viewsets.ModelViewSet):
     queryset = OrganizationDepartment.objects.all()
@@ -109,6 +114,7 @@ class OrganizationUserViewSet(viewsets.ModelViewSet):
         profile, created = UserProfile.objects.get_or_create(user=user)
 
         profile.company_name = org_user.organization.name
+        profile.organization = org_user.organization.id
         profile.department = org_user.department.title if org_user.department else ''  # 문자열로 저장
         profile.position = org_user.rank.title if org_user.rank else ''  # 문자열로 저장
         profile.save()
@@ -125,6 +131,7 @@ class OrganizationUserViewSet(viewsets.ModelViewSet):
         profile = UserProfile.objects.filter(user=user).first()
         if profile:
             profile.department = org_user.department.title if org_user.department else ''  # 문자열로 저장
+            profile.organization = org_user.organization.id if org_user.organization.id else 0
             profile.position = org_user.rank.title if org_user.rank else ''  # 문자열로 저장
             profile.save()
 
@@ -149,6 +156,7 @@ class OrganizationUserViewSet(viewsets.ModelViewSet):
         if profile:
             profile.department = ''
             profile.position = ''
+            profile.organization = ''
             profile.save()
         instance.delete()
 
@@ -173,7 +181,60 @@ class OrganizationReasonViewSet(viewsets.ModelViewSet):
             return OrganizationReason.objects.filter(organization__id=organization)
         return OrganizationReason.objects.all()
 
+class OrganizationProjectScopeViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationProjectScope.objects.all()
+    serializer_class = OrganizationProjectScopeSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationProjectScope.objects.filter(organization__id=organization)
+        return OrganizationProjectScope.objects.all()
+
+class OrganizationProjectTypeViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationProjectType.objects.all()
+    serializer_class = OrganizationProjectTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationProjectType.objects.filter(organization__id=organization)
+        return OrganizationProjectType.objects.all()
+
+class OrganizationGoalViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationGoal.objects.all()
+    serializer_class = OrganizationGoalSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationGoal.objects.filter(organization__id=organization)
+        return OrganizationGoal.objects.all()
+
+class OrganizationCommonTextViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationCommonText.objects.all()
+    serializer_class = OrganizationCommonTextSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationCommonText.objects.filter(organization__id=organization)
+        return OrganizationCommonText.objects.all()
+
+class OrganizationWorkResultViewSet(viewsets.ModelViewSet):
+    queryset = OrganizationWorkResult.objects.all()
+    serializer_class = OrganizationWorkResultSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        organization = self.request.query_params.get('organization', None)
+        if organization:
+            return OrganizationWorkResult.objects.filter(organization__id=organization)
+        return OrganizationWorkResult.objects.all()
 
 class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()

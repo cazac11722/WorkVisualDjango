@@ -1,0 +1,20 @@
+{
+  "name": "project1",
+  "version": "1.0.0",
+  "description": "업무 시각화 프로젝트 장고 rest api 서버",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cazac11722/WorkVisualDjango.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/cazac11722/WorkVisualDjango/issues"
+  },
+  "homepage": "https://github.com/cazac11722/WorkVisualDjango#readme"
+}

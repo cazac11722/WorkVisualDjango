@@ -44,3 +44,9 @@ class TaskChatViewSet(viewsets.ModelViewSet):
     queryset = TaskChat.objects.all()
     serializer_class = TaskChatSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        task = self.request.query_params.get('task', None)
+        if task:
+            return TaskChat.objects.filter(task=task)
+        return TaskChat.objects.all()

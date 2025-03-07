@@ -118,6 +118,31 @@ class OrganizationUserReasonSerializer(serializers.ModelSerializer):
         model = OrganizationUserReason
         fields = '__all__'
 
+class OrganizationProjectScopeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationProjectScope
+        fields = '__all__'
+
+class OrganizationProjectTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationProjectType
+        fields = '__all__'
+
+class OrganizationGoalSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationGoal
+        fields = '__all__'
+
+class OrganizationCommonTextSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationCommonText
+        fields = '__all__'
+
+class OrganizationWorkResultSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrganizationWorkResult
+        fields = '__all__'
+
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance

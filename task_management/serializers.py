@@ -10,11 +10,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Task
-        fields = [
-            "id", "title", "upload_date", "modified_date", "progress",
-            "attributes", "table_head", "table_body",
-            "organization", "author", "author_profile"  # ✅ 작성자 프로필 포함
-        ]
+        fields = '__all__'
         
 class GoalSerializer(serializers.ModelSerializer):
     class Meta:
@@ -22,6 +18,8 @@ class GoalSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class TaskChatSerializer(serializers.ModelSerializer):
+    profile = UserProfileSerializer(read_only=True, source="user.profile")  # ✅ 작성자의 프로필 정보 추가
+
     class Meta:
         model = TaskChat
         fields = '__all__'

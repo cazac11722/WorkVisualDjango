@@ -14,10 +14,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         특정 조직에 속한 Task만 필터링하여 반환
         """
         organization_id = self.request.query_params.get("organization", None)
-        
+        author_id = self.request.query_params.get("author", None)
+
         if organization_id:
             return Task.objects.filter(organization_id=organization_id)
-        
+        if author_id:
+            return Task.objects.filter(author_id=author_id)
+
         return Task.objects.all()
 
 class GoalViewSet(viewsets.ModelViewSet):
